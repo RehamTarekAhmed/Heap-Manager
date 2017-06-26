@@ -34,7 +34,7 @@ void* memalloc(unsigned int reqsize)
     current->free = false; /* we found a block \o/ */
     if (current->size >= (reqsize+METADATA+8)) /*if the rest after spiltting supports the metadata and a minimal block*/
     {
-      block_t* newblock;
+      block_t* newblock=(block_t *)(((char*) current) + reqsize + METADATA);
       newblock->free = true;
       newblock->size = current->size-reqsize-METADATA;
       newblock->next = current->next;
@@ -44,12 +44,13 @@ void* memalloc(unsigned int reqsize)
           newblock->next->prev = newblock;
     } /*then split*/
     current->size = reqsize;
-    return (((void*)current) + METADATA); /* return a pointer to the allocated segment */
+    return (void*)(((char*)current) + METADATA); /* return a pointer to the allocated segment */
 }
 
 void memfree(void *ptr)
 {
-  block_t* f = ((block_t*) ptr) - METADATA;
+  //block_t* t = ((block_t*) ptr) -1 ; /*-1 means a block before */
+  block_t* f = (block_t*)((char*)ptr - METADATA);
   if (f== NULL) /*Return if invalid block*/
     return;
   f->free = true;
@@ -57,13 +58,8 @@ void memfree(void *ptr)
     f = fusion (f->prev);
   if (f->next)
     fusion (f);
- else /*we are at the end of the allocated memory */
-  { if (f->prev)
-    f->prev ->next = NULL;
-    else
-    /* No more block !*/
-    head = NULL;
-  }
+ else if (f->prev)
+    f->prev->next = NULL;
 }
   block_t* fusion (block_t* b)
   {
@@ -75,4 +71,14 @@ void memfree(void *ptr)
       b->next->prev = b;
     }
   return (b);
+  }
+
+///XXX
+  void print_freelist() {
+      block_t *blocklist_head = head;
+      while(blocklist_head != NULL) {
+          printf("\tblocklist Size:%u, Head:%p, Prev:%p, Next:%p, Free:%d\t\n",blocklist_head->size,blocklist_head,blocklist_head->prev,blocklist_head->next,blocklist_head->free);
+          blocklist_head = blocklist_head->next;
+      }
+      printf("\n");
   }

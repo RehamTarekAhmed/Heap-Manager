@@ -2,10 +2,9 @@
 
 # compiler to use
 CC = clang
-CC1 = gcc
+#CC = gcc
 # flags to pass compiler
 CFLAGS = -ggdb3 -O0 -Qunused-arguments -std=c99 -Wall -Werror
-C1FLAGS = 
 # name for executable
 EXE = Manager
 
@@ -17,7 +16,7 @@ HDRS = Heap.h
 LIBS =
 
 # space-separated list of source files
-SRCS = Heap.c main.c
+SRCS = Driver.c Heap.c
 
 # automatically generated list of object files
 OBJS = $(SRCS:.c=.o)
@@ -27,7 +26,7 @@ OBJS = $(SRCS:.c=.o)
 $(EXE): $(OBJS) $(HDRS) Makefile
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-# dependencies 
+# dependencies
 $(OBJS): $(HDRS) Makefile
 
 # housekeeping

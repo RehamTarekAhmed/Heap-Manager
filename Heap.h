@@ -31,5 +31,6 @@ typedef struct block {/*contains the Meta data for each block, arranged for a be
  } block_t;
 
 block_t* fusion (block_t* b);
+void print_freelist();
 #define METADATA (sizeof(block_t))
 #endif // HEAP_H
