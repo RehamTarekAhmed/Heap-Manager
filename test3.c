@@ -2,7 +2,7 @@
 * Version: 1.0
 * Created: 18/6/2017
 * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
-* Test3: Obtain the avg time for both functions 
+* Test3: Obtain the avg time for both functions
  ***************************************************************************/
  //#include <time.h>
  #include <assert.h>
@@ -30,7 +30,7 @@
   double randvar;
   int fail = 0, success=0;
   //clock_t begin, end;
-  double time_spent,time_spent2;
+  double time_spent=0.0,time_spent2=0.0;
 
   /* Set the PSEUDO_RANDOM_SEED for pseduo random seed initialization based on time */
   if(PSEUDO_RANDOM_SEED)
@@ -48,15 +48,15 @@
         gettimeofday(&begin , NULL);
         ptr[i] = memalloc(size);
 				gettimeofday(&end , NULL);
-				time_spent+= time_diff(begin, end);
-
 
     if(ptr[i] == NULL) {
       //printf("malloc at iteration %d failed for size %d\n", i,size);
       ++fail;
     }
     else
-    ++success;
+    {    ++success;
+         time_spent+= time_diff(begin, end);
+    }
 
     if( ptr[itr] != NULL) {
       //printf("Freeing ptr[%d]\n", itr);
@@ -68,6 +68,7 @@
             ptr[itr] = NULL;
     }
   }
+
 //print_list();
   /*
   * now -- free them
@@ -90,19 +91,13 @@
 
   printf("Test case summary\n");
   printf("Loop count: %d, malloc successful: %d, malloc failed: %d\n", success+fail, success, fail);
-  printf("Average memalloc execution time: %g microseconds\t Average memfree execution time:%g microseconds\n", time_spent/LOOPCNT,time_spent2/j);
+  printf("Average memalloc execution time: %g microseconds\t Average memfree execution time:%g microseconds\n", time_spent/success,time_spent2/j);
   return 0;
 }
 
 double time_diff(struct timeval x , struct timeval y)
 {
-    double x_ms , y_ms , diff;
-
-    x_ms = (double)x.tv_sec*1000000 + (double)x.tv_usec;
-    y_ms = (double)y.tv_sec*1000000 + (double)y.tv_usec;
-
-    diff = (double)y_ms - (double)x_ms;
-
+    double diff = (y.tv_sec - x.tv_sec)*1000000 + (y.tv_usec - x.tv_usec);
     return diff;
 }
 /*double calculate(const struct rusage* b, const struct rusage* a)
