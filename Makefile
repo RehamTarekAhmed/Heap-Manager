@@ -1,12 +1,13 @@
 # Makefile
 
 # compiler to use
-CC = clang
-#CC = gcc
+#CC = clang
+CC = gcc
 # flags to pass compiler
-CFLAGS = -ggdb3 -O0 -Qunused-arguments -std=c99 -Wall -Werror
+#CFLAGS = -ggdb3 -O0 -Qunused-arguments -Wall -Werror
+CFLAGS = -g
 # name for executable
-EXE = Manager
+#EXE = Manager
 
 # space-separated list of header files
 HDRS = Heap.h
@@ -16,18 +17,24 @@ HDRS = Heap.h
 LIBS =
 
 # space-separated list of source files
-SRCS = Driver.c Heap.c
+SRCS = Heap.c
 
 # automatically generated list of object files
-OBJS = $(SRCS:.c=.o)
+#OBJS = $(SRCS:.c=.o)
 
+all: test1 test2 test3
 
-# default target
-$(EXE): $(OBJS) $(HDRS) Makefile
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+test1: $(SRCS) test1.c $(HDRS) Makefile
+	$(CC) $(CFLAGS) test1.c $(SRCS) -o $@
+
+test2: $(SRCS) test2.c $(HDRS) Makefile
+	$(CC) $(CFLAGS) test2.c $(SRCS) -o $@
+
+test3: $(SRCS) test3.c $(HDRS) Makefile
+	$(CC) $(CFLAGS) test3.c $(SRCS) -o $@
 
 # dependencies
-$(OBJS): $(HDRS) Makefile
+$(SRCS): $(HDRS) Makefile
 
 # housekeeping
 clean:

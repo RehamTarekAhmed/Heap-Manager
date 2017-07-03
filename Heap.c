@@ -7,7 +7,7 @@
 
 block_t* head = NULL;
 block_t* headf = NULL;
-block_t* freearray[Hashed]={NULL}; /*to improve the worst case scenario by a factor of Hashed XXX*/
+block_t* freearray[Hashed]={NULL}; /*To improve the worst case scenario by a factor of Hashed XXX*/
 
 /*-----------------------------------------------------------------------------------------------------------*/
 int hash_function( unsigned int size)
@@ -28,7 +28,6 @@ bool memalloc_init()
   head->nextf=NULL;
   head->prevfree=0;
   head->freedirection= '+';
-  freearray[Hashed]=head;
   insertf(head);
   return true;
 }
@@ -156,7 +155,7 @@ bool insertf(block_t* freeblock)
               pred=pred->nextf;
            freeblock->nextf=NULL;
            }
-         else /*If there is a next get the prev directly (can be NULL)*/
+         else /*If there is a next, get the prev directly (can be NULL)*/
           {
            pred=set_prevf(n);
            freeblock->nextf=n;
@@ -194,12 +193,13 @@ bool insertf(block_t* freeblock)
             set_dir(freeblock->nextf,freeblock);
           set_dir(freeblock, pred);
         }
+  return true;
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void set_dir(block_t* p,block_t* n)
 { if (!p || !n)
       return;
-  p->prevfree= abs((char*)p-(char*)n); /*TODO try them without casting */
+  p->prevfree= abs((char*)p-(char*)n);
   if((p-n)>0)
       p->freedirection='+';
   else
@@ -231,7 +231,7 @@ block_t* set_Next(block_t* p)
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void print_list()
-{
+{          unsigned int total=0;
       block_t *blocklist_head = head;
       while(blocklist_head) {
          block_t* next= set_Next(blocklist_head);
@@ -243,7 +243,10 @@ void print_list()
       while(blocklist_head){
          block_t* prevf= set_prevf(blocklist_head);
          printf( "\x1b[34m \t blocklist Size:%u, Head:%p, Prev Free:%p, Next Free:%p, Free:%d\t\n \x1b[0m",blocklist_head->size,blocklist_head,prevf,blocklist_head->nextf,blocklist_head->free);
+         total += blocklist_head->size;
          blocklist_head = blocklist_head->nextf;
+
       }
+      printf("TOTAL FREE: %u\t",total);
       printf("\n");
   }
