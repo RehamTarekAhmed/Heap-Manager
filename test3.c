@@ -2,7 +2,7 @@
 * Version: 1.0
 * Created: 18/6/2017
 * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
-* Test3: Obtain the avg time for both functions
+* Test3: Obtain the avg time for both functions 
  ***************************************************************************/
  //#include <time.h>
  #include <assert.h>

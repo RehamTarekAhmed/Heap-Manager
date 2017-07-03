@@ -2,7 +2,7 @@
 * Created: 18/6/2017
 * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
 * Test1: checking the sainty of the code
-* 0-> allocated 1-> free
+* 0-> allocated 1-> free 
 *The main list is represented in magenta and the Free list is represented in blue.
  ***************************************************************************/
  #include <assert.h>

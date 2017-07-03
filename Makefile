@@ -1,5 +1,4 @@
 # Makefile
-
 # compiler to use
 #CC = clang
 CC = gcc
