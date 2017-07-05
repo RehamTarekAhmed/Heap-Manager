@@ -2,7 +2,7 @@
 * Version: 1.0
 * Created: 18/6/2017
 * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
-* Test2: Checking efficiency 
+* Test2: Checking efficiency
  ***************************************************************************/
  //#include <time.h>
  #include <assert.h>
@@ -55,13 +55,13 @@
     ++success;
 
     if( ptr[itr] != NULL) {
-      //printf("Freeing ptr[%d]\n", itr);
+    //  printf("Freeing ptr[%d]\n", itr);
       memfree(ptr[itr]);
       ptr[itr] = NULL;
     }
   }
   getrusage(RUSAGE_SELF, &end);
-print_list();
+//print_list();
   /*
   * now -- free them
   * */
@@ -73,8 +73,7 @@ print_list();
   }
   //end = clock();
   time_spent= calculate(&begin, &end);
-
-//  print_list();
+  print_list();
   printf("\n");
   //time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 

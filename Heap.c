@@ -4,7 +4,7 @@
  * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
  ***************************************************************************/
 #include "Heap.h"
- 
+
 block_t* head = NULL;
 block_t* headf = NULL;
 block_t* freearray[Hashed]={NULL}; /*To improve the worst case scenario by a factor of Hashed XXX*/
@@ -41,7 +41,7 @@ void* memalloc(unsigned int reqsize)
     while((!freearray[x])&& x < Hashed-1) /* If you encountered a NULL, keep looking for other bigger free chunks*/
             x++;
       block_t* current = freearray[x]; /* Either a NULL or a head */
-    while ((current!=NULL) && !(current->free && reqsize< current->size < reqsize)) /*Loop over free blocks starting with the head*/
+    while ((current!=NULL) && reqsize > current->size ) /*Loop over free blocks starting with the head*/
          current = current->nextf;
     if (current==NULL)
          return NULL; /*No suitable chunk was found*/
