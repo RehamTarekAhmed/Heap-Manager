@@ -12,7 +12,7 @@
  #define RAND() (drand48())
  #define SEED(x) (srand48((x)))
  #define PSEUDO_RANDOM_SEED 0 /*toggle it for random results for every run*/
- #define LOOPCNT 5000
+ #define LOOPCNT 50000
  #define MAX_ALLOC_SIZE (MAX_HEAP_SIZE/1000) /**/
  #undef calculate
  #undef getrusage
@@ -53,6 +53,8 @@
     }
     else
     ++success;
+		
+
 
     if( ptr[itr] != NULL) {
     //  printf("Freeing ptr[%d]\n", itr);
@@ -65,6 +67,7 @@
   /*
   * now -- free them
   * */
+  //print_list();
   for(i=0; i < LOOPCNT; i++) {
     if(ptr[i] != NULL) {
       memfree(ptr[i]);

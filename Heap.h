@@ -13,7 +13,7 @@
 
 #define MAX_HEAP_SIZE (1<<27) /*134217728*/
 #define ALIGNMENT 	8 /*64-bit systems */
-#define Hashed      4
+#define Hashed      8
 #define ALIGN(x) (((x)+(ALIGNMENT-1)) & ~(ALIGNMENT-1)) /* A macro that rounds up to the nearest multiple of ALIGNMENT */
 
 typedef struct block {/*contains the Metadata for each block, arranged for a better alignment*/
@@ -21,12 +21,13 @@ typedef struct block {/*contains the Metadata for each block, arranged for a bet
     bool end; /*like our old fashoned NULL indicates the end of the list*/
     char freedirection; /*Linked with prevfree*/
     unsigned int size; /*contains the size of the data object or the amount of free bytes, 4 bytes*/
-    unsigned int prevsize; /*zero means no previous block*/
+    unsigned int prevsize; /*one means no previous block*/
     unsigned int prevfree;
     struct block* nextf; /*8 bytes*/
  } block_t;
 
 #define METADATA (sizeof(block_t)) /*Aligned*/
+#define METADATAF (sizeof(block_t)-8) /*Aligned*/
 
 void* memalloc(unsigned int reqsize); /*Allocates a contiguous block of memory of at least reqsize & returns a ptr of type void*/
 void memfree(void *ptr); /* marks the block of memory pointed to by ptr as free*/

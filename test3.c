@@ -12,7 +12,7 @@
  #define RAND() (drand48())
  #define SEED(x) (srand48((x)))
  #define PSEUDO_RANDOM_SEED 0 /*toggle it for random results for every run*/
- #define LOOPCNT 5000
+ #define LOOPCNT 50000
  #define MAX_ALLOC_SIZE (MAX_HEAP_SIZE/10000) /**/
  //#undef calculate
  //#undef getrusage

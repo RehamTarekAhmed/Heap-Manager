@@ -4,15 +4,19 @@
  * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
  ***************************************************************************/
 #include "Heap.h"
+//#include <assert.h>
 
 block_t* head = NULL;
 block_t* headf = NULL;
-block_t* freearray[Hashed]={NULL}; /*To improve the worst case scenario by a factor of Hashed XXX*/
+block_t* freearray[Hashed]={NULL}; /*To improve speed XXX*/
 
 /*-----------------------------------------------------------------------------------------------------------*/
 int hash_function( unsigned int size)
- {
-   int x= size / (MAX_HEAP_SIZE/Hashed);
+ { int x;
+   if (size >= MAX_HEAP_SIZE/10000)
+      x= Hashed-1;
+    else
+    x= size / ((MAX_HEAP_SIZE/10000)/(Hashed-1));
    return x;
  }
  /*-----------------------------------------------------------------------------------------------------------*/
@@ -24,9 +28,9 @@ bool memalloc_init()
   head->end = true;
   head->size = MAX_HEAP_SIZE-METADATA;
   head->free = true;
-  head->prevsize=0;
+  head->prevsize=1;
   head->nextf=NULL;
-  head->prevfree=0;
+  head->prevfree=1;
   head->freedirection= '+';
   insertf(head);
   return true;
@@ -35,26 +39,30 @@ bool memalloc_init()
 void* memalloc(unsigned int reqsize)
 {
     reqsize= ALIGN(reqsize);
-    if(reqsize <= 0 || reqsize > MAX_HEAP_SIZE-METADATA || ((head == NULL) && !memalloc_init()))
+    if(reqsize <= 0 || reqsize > MAX_HEAP_SIZE-METADATAF || ((head == NULL) && !memalloc_init()))
           return NULL;
+    reqsize-=8; /*Because I can always afford the 8 bytes, i don't need the nextf pointer anymore*/
     int x=hash_function(reqsize);     /* A range to start the search*/
     while((!freearray[x])&& x < Hashed-1) /* If you encountered a NULL, keep looking for other bigger free chunks*/
             x++;
       block_t* current = freearray[x]; /* Either a NULL or a head */
-    while ((current!=NULL) && reqsize > current->size ) /*Loop over free blocks starting with the head*/
+    while ((current!=NULL) && reqsize > (current->size+8) ) /*Loop over free blocks starting with the head*/
          current = current->nextf;
     if (current==NULL)
          return NULL; /*No suitable chunk was found*/
+  //   assert(reqsize <= current->size);
+
     removef(current); /* Remove the chunk you found from the free list */
     current->free = false;
-    if (current->size >= (reqsize+METADATA+ALIGNMENT)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
+//    if (current->size >= (reqsize+METADATA+ALIGNMENT)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
+    if (current->size >= (reqsize+METADATA)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
     {
       block_t* newblock=(block_t *)(((char*) current) + reqsize + METADATA);
       newblock->free = true;
       newblock->size = current->size-reqsize-METADATA;
       newblock->prevsize= reqsize;
       newblock->end=current->end;
-      newblock->prevfree=0;
+      newblock->prevfree=1;
       newblock->freedirection='+';
       newblock->nextf = NULL;
       current->size = reqsize;
@@ -65,7 +73,7 @@ void* memalloc(unsigned int reqsize)
       insertf(newblock);     /*inserting the new block in the free list*/
   } /*split complete*/
 
-    return (void*)(((char*)current) + METADATA); /* return a pointer to the allocated segment */
+    return (void*)(((char*)current) + METADATAF); /* return a pointer to the allocated segment */
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -73,8 +81,9 @@ void memfree(void *ptr)
 {
   if (ptr== NULL) /*Return if invalid block*/
     return;
-  block_t* to_free = (block_t*)((char*)ptr - METADATA);
+  block_t* to_free = (block_t*)((char*)ptr - METADATAF);
   block_t* pre =set_prev(to_free); /*Obtain the previous block*/
+  if (to_free->free == true) return;
   to_free->free = true;
   if(pre && pre->free)
   {
@@ -125,16 +134,18 @@ block_t* fusion (block_t* b)
         else
             freearray[x]=NULL;
         if(freeblock->nextf)
-            freeblock->nextf->prevfree=0;
+            freeblock->nextf->prevfree=1;
       //  headf=freearray[x];
       }
       freeblock->nextf=NULL;
-      freeblock->prevfree=0;
+      freeblock->prevfree=1;
       return true;
   }
 /*-----------------------------------------------------------------------------------------------------------*/
 bool insertf(block_t* freeblock)
-{ block_t* pred;
+{   if (!freeblock->free)
+          return false;
+  block_t* pred;
   int x=hash_function(freeblock->size);
   pred=freearray[x];
   block_t* n=NULL; int y=x;
@@ -169,7 +180,7 @@ bool insertf(block_t* freeblock)
          else
          {
            headf=freeblock;
-           freeblock->prevfree=0;
+           freeblock->prevfree=1;
           }
       }
   else if(pred && freeblock->size <= pred->size) /*insert at head*/
@@ -197,7 +208,7 @@ bool insertf(block_t* freeblock)
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void set_dir(block_t* p,block_t* n)
-{ if (!p || !n)
+{ if (!p || !n || p==n)
       return;
   p->prevfree= abs((char*)p-(char*)n);
   if((p-n)>0)
@@ -207,7 +218,7 @@ void set_dir(block_t* p,block_t* n)
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 block_t* set_prevf(block_t* p)
-{ if (!p || p->prevfree==0 ) return NULL;
+{ if (!p || p->prevfree==1 ) return NULL;
   if (p->freedirection=='-')
     return ((block_t*)((char*)p + p->prevfree));
   else
@@ -216,7 +227,7 @@ block_t* set_prevf(block_t* p)
 
 block_t* set_prev(block_t* p)
 {
- if(p && p->prevsize!=0)
+ if(p && p->prevsize!=1)
     return (block_t*)((char*)p - METADATA- p->prevsize);
   else
     return NULL;
@@ -236,16 +247,15 @@ void print_list()
       while(blocklist_head) {
          block_t* next= set_Next(blocklist_head);
          block_t* prev= set_prev(blocklist_head);
-         printf( "\x1b[35m \t blocklist Size:%u, Head:%p, Prev:%p, Next:%p, Free:%d\t\n \x1b[0m",blocklist_head->size,blocklist_head,prev,next,blocklist_head->free);
+         printf( "\x1b[35m \t blocklist Size:%u, Head:%p, Prev:%p, Next:%p, Free:%d\t\n \x1b[0m",blocklist_head->size+8,blocklist_head,prev,next,blocklist_head->free);
          blocklist_head = next;
       }
       blocklist_head = headf;
       while(blocklist_head){
          block_t* prevf= set_prevf(blocklist_head);
-         printf( "\x1b[34m \t blocklist Size:%u, Head:%p, Prev Free:%p, Next Free:%p, Free:%d\t\n \x1b[0m",blocklist_head->size,blocklist_head,prevf,blocklist_head->nextf,blocklist_head->free);
-         total += blocklist_head->size;
+         printf( "\x1b[34m \t blocklist Size:%u, Head:%p, Prev Free:%p, Next Free:%p, Free:%d\t\n \x1b[0m",blocklist_head->size+8,blocklist_head,prevf,blocklist_head->nextf,blocklist_head->free);
+         total += (blocklist_head->size+8);
          blocklist_head = blocklist_head->nextf;
-
       }
       printf("TOTAL FREE: %u\t",total);
       printf("\n");
