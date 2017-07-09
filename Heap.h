@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #define MAX_HEAP_SIZE (1<<27) /*134217728*/
 #define ALIGNMENT 	8 /*64-bit systems */
@@ -41,5 +42,11 @@ void set_dir(block_t* p,block_t* n); /*usage: 2nd,1st*/
 block_t* set_prevf(block_t* p);
 block_t* set_Next(block_t* p);
 block_t* set_prev(block_t* p);
-
+void __attribute__((constructor)) calledFirst();
+void __attribute__((destructor)) calledLast();
+/*For thread safety*/
+pthread_rwlock_t lock;
+#define rlock  (pthread_rwlock_rdlock(&lock))
+#define wlock (pthread_rwlock_wrlock(&lock))
+#define unlock    (pthread_rwlock_unlock(&lock))
 #endif

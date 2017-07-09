@@ -12,18 +12,26 @@
  #define RAND() (drand48())
  #define SEED(x) (srand48((x)))
  #define PSEUDO_RANDOM_SEED 0 /*toggle it for random results for every run*/
- #define LOOPCNT 50000
+ #define LOOPCNT 5000
  #define MAX_ALLOC_SIZE (MAX_HEAP_SIZE/1000) /**/
  #undef calculate
  #undef getrusage
 
  double calculate(const struct rusage* b, const struct rusage* a);
-
+void funct(int size, char*a)
+ { int j;
+   for(j=0; j < size-1; j++)
+ {
+   a[j] = 'a';
+ }
+ a[size-1] = '\0';
+ //print_list();
+}
  int main(int argc, char *argv[])
 {     struct rusage begin, end;
   int size;
   int itr;
-  void *ptr[LOOPCNT]={NULL};
+  char *ptr[LOOPCNT]={NULL};
   int i,j;
   double randvar;
   int fail = 0, success=0;
@@ -44,7 +52,12 @@
       size = (int)(RAND() * MAX_ALLOC_SIZE);
       while(size == 0)
           size = (int)(RAND() * MAX_ALLOC_SIZE);
+          if (size<=4352 && size>4344)
+          {
+          int x=0;
+          }
         ptr[i] = memalloc(size);
+//      char*  array1 = (char*)ptr[i];
 
 
     if(ptr[i] == NULL) {
@@ -52,9 +65,9 @@
       ++fail;
     }
     else
-    ++success;
-		
-
+    {++success;
+    funct(size,ptr[i]);
+}
 
     if( ptr[itr] != NULL) {
     //  printf("Freeing ptr[%d]\n", itr);

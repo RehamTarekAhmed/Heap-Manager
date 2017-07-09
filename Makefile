@@ -4,7 +4,7 @@
 CC = gcc
 # flags to pass compiler
 #CFLAGS = -ggdb3 -O0 -Qunused-arguments -Wall -Werror
-CFLAGS = -g
+CFLAGS = -g -pthread
 # name for executable
 #EXE = Manager
 

@@ -20,7 +20,6 @@ int hash_function( unsigned int size)
    return x;
  }
  /*-----------------------------------------------------------------------------------------------------------*/
-
 bool memalloc_init()
 {
   head = (block_t*)malloc(MAX_HEAP_SIZE); /*sbrk could have been used but I sticked to the pdf*/
@@ -39,19 +38,19 @@ bool memalloc_init()
 void* memalloc(unsigned int reqsize)
 {
     reqsize= ALIGN(reqsize);
+   wlock;
     if(reqsize <= 0 || reqsize > MAX_HEAP_SIZE-METADATAF || ((head == NULL) && !memalloc_init()))
           return NULL;
     reqsize-=8; /*Because I can always afford the 8 bytes, i don't need the nextf pointer anymore*/
     int x=hash_function(reqsize);     /* A range to start the search*/
     while((!freearray[x])&& x < Hashed-1) /* If you encountered a NULL, keep looking for other bigger free chunks*/
             x++;
-      block_t* current = freearray[x]; /* Either a NULL or a head */
-    while ((current!=NULL) && reqsize > (current->size+8) ) /*Loop over free blocks starting with the head*/
+      block_t* current = freearray[x]; /* Either a NULL or a checkpoint */
+    while ((current!=NULL) && reqsize > (current->size) ) /*Loop over free blocks starting with the checkpoint*/
          current = current->nextf;
     if (current==NULL)
          return NULL; /*No suitable chunk was found*/
   //   assert(reqsize <= current->size);
-
     removef(current); /* Remove the chunk you found from the free list */
     current->free = false;
 //    if (current->size >= (reqsize+METADATA+ALIGNMENT)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
@@ -72,15 +71,15 @@ void* memalloc(unsigned int reqsize)
           next->prevsize=newblock->size;
       insertf(newblock);     /*inserting the new block in the free list*/
   } /*split complete*/
-
+   unlock;
     return (void*)(((char*)current) + METADATAF); /* return a pointer to the allocated segment */
 }
-
 /*-----------------------------------------------------------------------------------------------------------*/
 void memfree(void *ptr)
 {
   if (ptr== NULL) /*Return if invalid block*/
     return;
+  wlock;
   block_t* to_free = (block_t*)((char*)ptr - METADATAF);
   block_t* pre =set_prev(to_free); /*Obtain the previous block*/
   if (to_free->free == true) return;
@@ -97,6 +96,7 @@ void memfree(void *ptr)
     fusion (to_free);
   }
   insertf(to_free);
+  unlock;
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 block_t* fusion (block_t* b)
@@ -124,7 +124,6 @@ block_t* fusion (block_t* b)
             freearray[x]=freeblock->nextf;
         else if(freearray[x]==freeblock)
               freearray[x]=NULL;
-
       }
       else /* there was one element or the starting element*/
       {    if(freeblock==headf)
@@ -152,42 +151,27 @@ bool insertf(block_t* freeblock)
   if (pred == NULL) /*Means either at head or the first in the sector*/
       { freearray[x] = freeblock;
         while(y<(Hashed-1) && !n)
-          { y++;
-            n=freearray[y];
-          }
+          { y++; n=freearray[y];}
          if(!n) /*No next, find the pred*/
          {
            y=x;
            while(y>0 && !pred)
-            { y--;
-              pred=freearray[y];
-            }
+            { y--;  pred=freearray[y];}
            while(pred && pred->nextf && hash_function(pred->nextf->size) < x)
               pred=pred->nextf;
            freeblock->nextf=NULL;
            }
          else /*If there is a next, get the prev directly (can be NULL)*/
-          {
-           pred=set_prevf(n);
-           freeblock->nextf=n;
-           set_dir(n,freeblock);
-          }
+          { pred=set_prevf(n); freeblock->nextf=n;  set_dir(n,freeblock);}
          if (pred)
-         {
-           set_dir(freeblock, pred);
-           pred->nextf=freeblock;
-          }
+         { set_dir(freeblock, pred);  pred->nextf=freeblock;}
          else
-         {
-           headf=freeblock;
-           freeblock->prevfree=1;
-          }
+         { headf=freeblock; freeblock->prevfree=1;  }
       }
   else if(pred && freeblock->size <= pred->size) /*insert at head*/
       {  n=set_prevf(pred); /* Just reusing the declared var NOTE: Refers to the prev*/
          if(n)
-         {set_dir(freeblock,n);
-         n->nextf=freeblock;}
+         {set_dir(freeblock,n); n->nextf=freeblock;}
          else
           headf=freeblock;
          set_dir(pred, freeblock);
@@ -196,13 +180,13 @@ bool insertf(block_t* freeblock)
       }
   else
       {
-          while (pred->nextf != NULL && (pred->nextf->size < freeblock->size))
+         while (pred->nextf != NULL && (pred->nextf->size < freeblock->size))
                 pred = pred->nextf;
-          freeblock->nextf = pred->nextf;
-          pred->nextf = freeblock;
-          if(freeblock->nextf)
+         freeblock->nextf = pred->nextf;
+         pred->nextf = freeblock;
+         if(freeblock->nextf)
             set_dir(freeblock->nextf,freeblock);
-          set_dir(freeblock, pred);
+         set_dir(freeblock, pred);
         }
   return true;
 }
@@ -224,7 +208,6 @@ block_t* set_prevf(block_t* p)
   else
     return ((block_t*)((char*)p - p->prevfree));
 }
-
 block_t* set_prev(block_t* p)
 {
  if(p && p->prevsize!=1)
@@ -232,7 +215,6 @@ block_t* set_prev(block_t* p)
   else
     return NULL;
 }
-
 block_t* set_Next(block_t* p)
 {
    if (p && !(p->end))
@@ -242,8 +224,9 @@ block_t* set_Next(block_t* p)
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void print_list()
-{          unsigned int total=0;
+{     unsigned int total=0;
       block_t *blocklist_head = head;
+      rlock;
       while(blocklist_head) {
          block_t* next= set_Next(blocklist_head);
          block_t* prev= set_prev(blocklist_head);
@@ -257,6 +240,19 @@ void print_list()
          total += (blocklist_head->size+8);
          blocklist_head = blocklist_head->nextf;
       }
+      unlock;
       printf("TOTAL FREE: %u\t",total);
       printf("\n");
   }
+  /*-----------------------------------------------------------------------------------------------------------*/
+  void calledFirst() /*TODO lock threads, system calls and realloc/calloc*/
+  { pthread_rwlock_init(&lock, NULL);
+    memalloc_init();
+  }
+
+void calledLast()
+{
+  free(head);
+  head=NULL;
+  pthread_rwlock_destroy(&lock);
+}
