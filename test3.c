@@ -35,7 +35,6 @@
   /* Set the PSEUDO_RANDOM_SEED for pseduo random seed initialization based on time */
   if(PSEUDO_RANDOM_SEED)
     SEED(time(NULL));
-
   //begin = clock();
   for(i = 0; i < LOOPCNT; i++)
   {
