@@ -38,10 +38,11 @@
   //begin = clock();
   for(i = 0; i < LOOPCNT; i++)
   {
-    itr = (int)(RAND() * LOOPCNT);
+    
+    size = (int)(RAND() * MAX_ALLOC_SIZE);
     randvar = RAND();
+    itr = (int)(RAND() * LOOPCNT);
 
-      size = (int)(RAND() * MAX_ALLOC_SIZE);
       while(size == 0)
           size = (int)(RAND() * MAX_ALLOC_SIZE);
         gettimeofday(&begin , NULL);

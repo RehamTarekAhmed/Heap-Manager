@@ -4,7 +4,7 @@
  * Author: Reham Tarek <RehamTarekAhmed@gmail.com>
  ***************************************************************************/
 #include "Heap.h"
-//#include <assert.h>
+#include <assert.h>
 
 block_t* head = NULL;
 block_t* headf = NULL;
@@ -24,6 +24,9 @@ bool memalloc_init()
 {
   head = (block_t*)malloc(MAX_HEAP_SIZE); /*sbrk could have been used but I sticked to the pdf*/
   if(!head) return false;
+  //head = (block_t*) sbrk(MAX_HEAP_SIZE); /*On  success,  sbrk() returns  the  previous program break.*/
+   //if (head == (void *)-1) /*On error, (void *) -1 is returned and errno is set to ENOMEM*/
+    //   return false;
   head->end = true;
   head->size = MAX_HEAP_SIZE-METADATA;
   head->free = true;
@@ -53,7 +56,6 @@ void* memalloc(unsigned int reqsize)
   //   assert(reqsize <= current->size);
     removef(current); /* Remove the chunk you found from the free list */
     current->free = false;
-//    if (current->size >= (reqsize+METADATA+ALIGNMENT)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
     if (current->size >= (reqsize+METADATA)) /*Split if the chunk after spiltting supports the metadata and a minimal block*/
     {
       block_t* newblock=(block_t *)(((char*) current) + reqsize + METADATA);
@@ -72,7 +74,7 @@ void* memalloc(unsigned int reqsize)
       insertf(newblock);     /*inserting the new block in the free list*/
   } /*split complete*/
    unlock;
-    return (void*)(((char*)current) + METADATAF); /* return a pointer to the allocated segment */
+   return (void*)(((char*)current) + METADATAF); /* return a pointer to the allocated segment */
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void memfree(void *ptr)
@@ -107,7 +109,7 @@ block_t* fusion (block_t* b)
     if (!b->end)
       {next=set_Next(b);
       next->prevsize= b->size;}
-  return (b);
+    return (b);
   }
   /*-----------------------------------------------------------------------------------------------------------*/
   bool removef(block_t* freeblock)
@@ -192,8 +194,12 @@ bool insertf(block_t* freeblock)
 }
 /*-----------------------------------------------------------------------------------------------------------*/
 void set_dir(block_t* p,block_t* n)
-{ if (!p || !n || p==n)
+{ if (!p|| p==n)
       return;
+  else if(!n)
+    {   p->prevfree= 1;
+          return;
+    }
   p->prevfree= abs((char*)p-(char*)n);
   if((p-n)>0)
       p->freedirection='+';
@@ -208,6 +214,7 @@ block_t* set_prevf(block_t* p)
   else
     return ((block_t*)((char*)p - p->prevfree));
 }
+
 block_t* set_prev(block_t* p)
 {
  if(p && p->prevsize!=1)
@@ -215,6 +222,7 @@ block_t* set_prev(block_t* p)
   else
     return NULL;
 }
+
 block_t* set_Next(block_t* p)
 {
    if (p && !(p->end))
@@ -243,16 +251,18 @@ void print_list()
       unlock;
       printf("TOTAL FREE: %u\t",total);
       printf("\n");
-  }
+}
   /*-----------------------------------------------------------------------------------------------------------*/
-  void calledFirst() /*TODO lock threads, system calls and realloc/calloc*/
-  { pthread_rwlock_init(&lock, NULL);
+  void calledFirst() /*TODO lock threads*/
+  {
+    pthread_rwlock_init(&lock, NULL);
     memalloc_init();
   }
 
 void calledLast()
 {
   free(head);
+  //sbrk(-MAX_HEAP_SIZE);
   head=NULL;
   pthread_rwlock_destroy(&lock);
 }

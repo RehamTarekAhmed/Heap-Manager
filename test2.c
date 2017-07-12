@@ -32,7 +32,7 @@ void funct(int size, char*a)
   int size;
   int itr;
   char *ptr[LOOPCNT]={NULL};
-  int i,j;
+  int i;
   double randvar;
   int fail = 0, success=0;
   //clock_t begin, end;
@@ -50,12 +50,11 @@ void funct(int size, char*a)
     randvar = RAND();
 
       size = (int)(RAND() * MAX_ALLOC_SIZE);
+      size = (int)(RAND() * MAX_ALLOC_SIZE);
+
       while(size == 0)
           size = (int)(RAND() * MAX_ALLOC_SIZE);
-          if (size<=4352 && size>4344)
-          {
-          int x=0;
-          }
+    //    printf("%i\t",i);
         ptr[i] = memalloc(size);
 //      char*  array1 = (char*)ptr[i];
 
@@ -63,6 +62,7 @@ void funct(int size, char*a)
     if(ptr[i] == NULL) {
       //printf("malloc at iteration %d failed for size %d\n", i,size);
       ++fail;
+    //  printf("\n");
     }
     else
     {++success;
@@ -75,8 +75,8 @@ void funct(int size, char*a)
       ptr[itr] = NULL;
     }
   }
+  print_list();
   getrusage(RUSAGE_SELF, &end);
-//print_list();
   /*
   * now -- free them
   * */
@@ -89,8 +89,7 @@ void funct(int size, char*a)
   }
   //end = clock();
   time_spent= calculate(&begin, &end);
-  print_list();
-  printf("\n");
+  //printf("\n");
   //time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
   printf("Test case summary\n");

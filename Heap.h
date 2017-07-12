@@ -36,7 +36,6 @@ bool memalloc_init();
 bool insertf(block_t* freeblock);
 bool removef(block_t* freeblock);
 block_t* fusion (block_t* b);
-void print_list(); /*DEBUGGING*/
 int hash_function( unsigned int size);
 void set_dir(block_t* p,block_t* n); /*usage: 2nd,1st*/
 block_t* set_prevf(block_t* p);
@@ -44,9 +43,11 @@ block_t* set_Next(block_t* p);
 block_t* set_prev(block_t* p);
 void __attribute__((constructor)) calledFirst();
 void __attribute__((destructor)) calledLast();
+/*DEBUGGING*/
+void print_list();
 /*For thread safety*/
 pthread_rwlock_t lock;
 #define rlock  (pthread_rwlock_rdlock(&lock))
-#define wlock (pthread_rwlock_wrlock(&lock))
-#define unlock    (pthread_rwlock_unlock(&lock))
+#define wlock  (pthread_rwlock_wrlock(&lock))
+#define unlock (pthread_rwlock_unlock(&lock))
 #endif
